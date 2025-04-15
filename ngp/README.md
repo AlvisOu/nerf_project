@@ -1,9 +1,8 @@
 # Instant-NGP NeRF setup
+Run all below commands in ngp/
 
-## Set up docker image
-- Download .tar file from Drive
-- Move the file into /ngp subdirectory
-- Run `docker load -i instant-ngp-final.tar` to load the image
+## To set up docker image
+Run `docker build -t instant-ngp-final .`
 
 ## To run training on sample fox dataset and save snapshot
 Run `docker run --rm --gpus all -it \
