@@ -1,0 +1,7 @@
+*.msgpack
+*.tar
+__pycache__/
+*.pyc
+instant-ngp/
+build/
+output/
