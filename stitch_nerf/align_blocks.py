@@ -6,6 +6,10 @@ import sqlite3
 import argparse
 
 def load_camera_centers(transforms_path: str) -> np.ndarray:
+    """
+    Parses transforms.json file to extract camera centers.
+    Each camera center is represented as a 3D point in the local coordinate system.
+    """
     with open(transforms_path) as f:
         data = json.load(f)
 
@@ -17,6 +21,10 @@ def load_camera_centers(transforms_path: str) -> np.ndarray:
     return np.array(points)
 
 def points_to_pcd(points: np.ndarray, color=[1, 0, 0]) -> o3d.geometry.PointCloud:
+    """
+    Converts each camera center to a point cloud.
+    Each point is colored with the specified color for visualization if needed.
+    """
     pcd = o3d.geometry.PointCloud()
     pcd.points = o3d.utility.Vector3dVector(points)
     colors = np.tile(np.array(color), (points.shape[0], 1))
@@ -24,6 +32,10 @@ def points_to_pcd(points: np.ndarray, color=[1, 0, 0]) -> o3d.geometry.PointClou
     return pcd
 
 def apply_global_transform(transforms_path: str, output_path: str, transform: np.ndarray) -> None:
+    """
+    Applies a 4x4 matrix to all camera transform_matrix values in a transforms.json.
+    Saves the modified transforms.json to a new file.
+    """
     with open(transforms_path) as f:
         data = json.load(f)
 
@@ -37,6 +49,10 @@ def apply_global_transform(transforms_path: str, output_path: str, transform: np
         json.dump(data, f, indent=4)
 
 def compute_global_aabb(transforms_path: str, transform: np.ndarray):
+    """
+    Comutes the global axis-aligned bounding box (AABB) of the camera centers
+    after applying the given transformation matrix.
+    """
     with open(transforms_path) as f:
         data = json.load(f)
 
@@ -52,11 +68,16 @@ def compute_global_aabb(transforms_path: str, transform: np.ndarray):
     return aabb_min.tolist(), aabb_max.tolist()
 
 def store_transform_sqlite(db_path: str, block_name: str, transform: np.ndarray, aabb_min, aabb_max):
+    """
+    Stores the transformation matrix and AABB in a SQLite database.
+    The transformation matrix is stored as a flattened 1D array.
+    The AABB is stored as two 3D points (min and max).
+    """
     conn = sqlite3.connect(db_path)
     c = conn.cursor()
 
     c.execute("""
-        CREATE TABLE IF NOT EXISTS block_transforms (
+        CREATE TABLE block_transforms (
             block_name TEXT PRIMARY KEY,
             t00 REAL, t01 REAL, t02 REAL, t03 REAL,
             t10 REAL, t11 REAL, t12 REAL, t13 REAL,
@@ -86,6 +107,12 @@ def store_transform_sqlite(db_path: str, block_name: str, transform: np.ndarray,
     conn.close()
 
 def icp_align(path_A: str, path_B: str, out_B_aligned: str, store_db_path: str = None, threshold: float = 0.5, viewer: bool = False):
+    """
+    Main function to align two NeRF blocks using ICP.
+    It loads the camera centers from the transforms.json files, applies ICP to align them,
+    and saves the aligned transforms.json for the target block.
+    Stores the transformation matrix and AABB in a SQLite database.
+    """
     points_A = load_camera_centers(path_A)
     points_B = load_camera_centers(path_B)
 
@@ -108,6 +135,8 @@ def icp_align(path_A: str, path_B: str, out_B_aligned: str, store_db_path: str =
     apply_global_transform(path_B, out_B_aligned, result.transformation)
 
     if store_db_path:
+        if os.path.exists(store_db_path):
+            os.remove(store_db_path)
         block_name = os.path.basename(os.path.dirname(path_B))
         aabb_min, aabb_max = compute_global_aabb(path_B, result.transformation)
         store_transform_sqlite(store_db_path, block_name, result.transformation, aabb_min, aabb_max)
