@@ -12,5 +12,6 @@ Run `docker run --rm --gpus all -it \
     --scene /project/data/nerf/fox \
     --save_snapshot /project/fox_snapshot.msgpack \
     --n_steps 5000"`
-
-
+## To load msgpack and view rendered scene
+Run `.\instant-ngp.exe data/nerf/fox --load_snapshot=fox_snapshot.msgpack`
+Make sure the .msgpack file is located on the same level as the data/ folder
