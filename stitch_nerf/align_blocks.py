@@ -175,7 +175,7 @@ def icp_align(path_A: str, path_B: str, out_B_aligned: str, store_db_path: str =
 
     transform_B_to_global = transform_A @ result.transformation
 
-    apply_global_transform(path_B, out_B_aligned, transform_B_to_global)
+    # apply_global_transform(path_B, out_B_aligned, transform_B_to_global)
 
     if store_db_path:
         aabb_min, aabb_max = compute_global_aabb(path_B, transform_B_to_global)
