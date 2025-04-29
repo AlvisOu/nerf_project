@@ -7,6 +7,47 @@ import argparse
 import open3d as o3d
 import numpy as np
 import copy
+import json
+
+def load_camera_centers(transforms_path: str) -> np.ndarray:
+    with open(transforms_path) as f:
+        data = json.load(f)
+
+    centers = []
+    for frame in data["frames"]:
+        T = np.array(frame["transform_matrix"])
+        center = T[:3, 3]
+        centers.append(center)
+    return np.array(centers)
+
+def visualize_global_camera_centers(path_A, path_B, transform_A_to_global, transform_B_to_global):
+    """
+    Loads camera centers from paths A and B, applies global transforms, and visualizes them.
+    """
+    points_A = load_camera_centers(path_A)
+    points_B = load_camera_centers(path_B)
+
+    # Homogenize and transform
+    points_A_homog = np.hstack((points_A, np.ones((points_A.shape[0], 1))))
+    points_B_homog = np.hstack((points_B, np.ones((points_B.shape[0], 1))))
+
+    points_A_global = (transform_A_to_global @ points_A_homog.T).T[:, :3]
+    points_B_global = (transform_B_to_global @ points_B_homog.T).T[:, :3]
+
+    # Create point clouds
+    pcd_A = o3d.geometry.PointCloud()
+    pcd_A.points = o3d.utility.Vector3dVector(points_A_global)
+    pcd_A.paint_uniform_color([1, 0, 0])  # Red
+
+    pcd_B = o3d.geometry.PointCloud()
+    pcd_B.points = o3d.utility.Vector3dVector(points_B_global)
+    pcd_B.paint_uniform_color([0, 1, 0])  # Green
+
+    # Axis helper
+    axis = o3d.geometry.TriangleMesh.create_coordinate_frame(size=1.0)
+
+    # Visualize
+    o3d.visualization.draw_geometries([pcd_A, pcd_B, axis])
 
 def transform_point_cloud(pcd: o3d.geometry.PointCloud, transform: np.ndarray) -> o3d.geometry.PointCloud:
     """
@@ -28,8 +69,12 @@ def transform_point_cloud(pcd: o3d.geometry.PointCloud, transform: np.ndarray) -
     pcd_transformed.points = o3d.utility.Vector3dVector(points_transformed)
 
     # Copy colors if available
-    if pcd.has_colors():
-        pcd_transformed.colors = copy.deepcopy(pcd.colors)
+    # if pcd.has_colors():
+    #     pcd_transformed.colors = copy.deepcopy(pcd.colors)
+
+    uniform_color = np.array([0, 1, 1])  # Example: cyan
+    colors = np.tile(uniform_color, (np.asarray(pcd.points).shape[0], 1))
+    pcd_transformed.colors = o3d.utility.Vector3dVector(colors)
 
     # Copy normals if available
     if pcd.has_normals():
@@ -123,7 +168,8 @@ def icp_align(path_A: str, path_B: str, init_transform_path: str, store_db_path:
         store_transform_sqlite(store_db_path, block_name_A, transform_A)
 
     init_transform = np.load(init_transform_path)
-    print("Running ICP...")
+    print(f"Using initial transform:", init_transform)
+    print(f"Running ICP with threshold {threshold}")
     result = o3d.pipelines.registration.registration_icp(
         pcd_B, pcd_A, threshold,
         init_transform,
@@ -138,17 +184,20 @@ def icp_align(path_A: str, path_B: str, init_transform_path: str, store_db_path:
         store_transform_sqlite(store_db_path, block_name_B, transform_B_to_global)
 
     if viewer:
-        pcd_B_aligned = transform_point_cloud(pcd_B, transform_B_to_global)
-        print("Aligned result (red = A, cyan = B-aligned)")
-        o3d.visualization.draw_geometries([pcd_A, pcd_B_aligned])
+        path_A_transforms = os.path.join(os.path.dirname(path_A), "transforms.json")
+        path_B_transforms = os.path.join(os.path.dirname(path_B), "transforms.json")
+        # pcd_B_aligned = transform_point_cloud(pcd_B, transform_B_to_global)
+        # print("Aligned result (red = A, cyan = B-aligned)")
+        # o3d.visualization.draw_geometries([pcd_A, pcd_B_aligned])
+        visualize_global_camera_centers(path_A_transforms, path_B_transforms, transform_A, transform_B_to_global)
 
 def main():
     parser = argparse.ArgumentParser(description="Align NeRF blocks via ICP and store transforms.")
     parser.add_argument("ref_block", help="Path to reference block's .ply file")
     parser.add_argument("target_block", help="Path to target block's .ply file (to be aligned)")
-    parser.add_argument("--init_transform", help="Path to initial transform (npy) file to use as ICP starting guess.")
+    parser.add_argument("--init_transform", default="./initial_transform.npy", help="Path to initial transform (npy) file to use as ICP starting guess.")
     parser.add_argument("--db", default="../metadata.sqlite", help="Path to SQLite DB to store global transforms and AABB")
-    parser.add_argument("--threshold", type=float, default=5.0, help="ICP distance threshold")
+    parser.add_argument("--threshold", type=float, default=0.2, help="ICP distance threshold")
     parser.add_argument("--viewer", action="store_true", help="Open viewer to visualize the alignment")
     args = parser.parse_args()
 
