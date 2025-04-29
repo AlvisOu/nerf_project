@@ -196,7 +196,7 @@ def main():
     parser.add_argument("ref_block", help="Path to reference block's .ply file")
     parser.add_argument("target_block", help="Path to target block's .ply file (to be aligned)")
     parser.add_argument("--init_transform", default="./initial_transform.npy", help="Path to initial transform (npy) file to use as ICP starting guess.")
-    parser.add_argument("--db", default="../metadata.sqlite", help="Path to SQLite DB to store global transforms and AABB")
+    parser.add_argument("--db", default="../transforms.sqlite", help="Path to SQLite DB to store global transforms and AABB")
     parser.add_argument("--threshold", type=float, default=0.2, help="ICP distance threshold")
     parser.add_argument("--viewer", action="store_true", help="Open viewer to visualize the alignment")
     args = parser.parse_args()
