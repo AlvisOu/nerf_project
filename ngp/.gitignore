@@ -1,3 +1,5 @@
 *.msgpack
 *.tar
 __pycache__/
+*.obj
+*.ply
