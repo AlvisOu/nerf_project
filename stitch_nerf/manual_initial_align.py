@@ -28,10 +28,18 @@ def manual_align(ref_path, target_path, save_path="initial_transform.npy"):
     pcd_A = o3d.geometry.PointCloud()
     pcd_A.points = o3d.utility.Vector3dVector(points_A)
     pcd_A.paint_uniform_color([1, 0, 0])  # Red color for Block A
+    points_A = np.asarray(pcd_A.points)
+    print("X range:", np.ptp(points_A[:, 0]))
+    print("Y range:", np.ptp(points_A[:, 1]))
+    print("Z range:", np.ptp(points_A[:, 2]))
 
     pcd_B = o3d.geometry.PointCloud()
     pcd_B.points = o3d.utility.Vector3dVector(points_B)
     pcd_B.paint_uniform_color([0, 1, 0])  # Green color for Block B
+    points_B = np.asarray(pcd_B.points)
+    print("X range:", np.ptp(points_B[:, 0]))
+    print("Y range:", np.ptp(points_B[:, 1]))
+    print("Z range:", np.ptp(points_B[:, 2]))
 
     # Create a copy to apply transformations interactively
     pcd_B_copy = copy.deepcopy(pcd_B)
@@ -43,8 +51,9 @@ def manual_align(ref_path, target_path, save_path="initial_transform.npy"):
     print("W/S: move forward/backward")
     print("A/D: move left/right")
     print("R/F: move up/down")
-    print("Q/E: rotate left/right (yaw)")
-    print("Z/X: scale up/down (optional)")
+    print("Q/E: rotate yaw left/right")
+    print("T/G: rotate pitch up/down")
+    print("Z/X: rotate roll ccw/cw")
     print("Space: save current transform and exit")
     print("ESC: exit without saving")
 
@@ -52,6 +61,9 @@ def manual_align(ref_path, target_path, save_path="initial_transform.npy"):
     vis.create_window()
     vis.add_geometry(pcd_A)
     vis.add_geometry(pcd_B_copy)
+
+    axis = o3d.geometry.TriangleMesh.create_coordinate_frame(size=1.0, origin=[0, 0, 0])
+    vis.add_geometry(axis)
 
     move_delta = 0.1  # meters
     rotate_delta = np.radians(5)  # degrees
@@ -67,17 +79,25 @@ def manual_align(ref_path, target_path, save_path="initial_transform.npy"):
         T = T_translate @ T
         update_geometry()
 
-    def rotate(yaw=0):
+    def rotate_axis(axis: str, angle: float):
         nonlocal T
-        c, s = np.cos(yaw), np.sin(yaw)
-        R = np.array([
-            [ c, 0, s],
-            [ 0, 1, 0],
-            [-s, 0, c]
-        ])
-        T_rotate = np.eye(4)
-        T_rotate[:3, :3] = R
-        T = T_rotate @ T
+        R = np.eye(4)
+        c, s = np.cos(angle), np.sin(angle)
+
+        if axis == 'x':
+            R[:3, :3] = [[1, 0, 0],
+                        [0, c, -s],
+                        [0, s, c]]
+        elif axis == 'y':
+            R[:3, :3] = [[c, 0, s],
+                        [0, 1, 0],
+                        [-s, 0, c]]
+        elif axis == 'z':
+            R[:3, :3] = [[c, -s, 0],
+                        [s,  c, 0],
+                        [0,  0, 1]]
+
+        T = R @ T
         update_geometry()
 
     # Key callbacks
@@ -87,8 +107,12 @@ def manual_align(ref_path, target_path, save_path="initial_transform.npy"):
     vis.register_key_callback(ord("D"), lambda vis: move(move_delta, 0, 0))
     vis.register_key_callback(ord("R"), lambda vis: move(0, move_delta, 0))
     vis.register_key_callback(ord("F"), lambda vis: move(0, -move_delta, 0))
-    vis.register_key_callback(ord("Q"), lambda vis: rotate(rotate_delta))
-    vis.register_key_callback(ord("E"), lambda vis: rotate(-rotate_delta))
+    vis.register_key_callback(ord("Q"), lambda vis: rotate_axis('y',  rotate_delta))  # Yaw left
+    vis.register_key_callback(ord("E"), lambda vis: rotate_axis('y', -rotate_delta))  # Yaw right
+    vis.register_key_callback(ord("T"), lambda vis: rotate_axis('x',  rotate_delta))  # Pitch up
+    vis.register_key_callback(ord("G"), lambda vis: rotate_axis('x', -rotate_delta))  # Pitch down
+    vis.register_key_callback(ord("Z"), lambda vis: rotate_axis('z',  rotate_delta))  # Roll ccw
+    vis.register_key_callback(ord("X"), lambda vis: rotate_axis('z', -rotate_delta))  # Roll cw
 
     def save_transform(vis):
         np.save(save_path, T)
