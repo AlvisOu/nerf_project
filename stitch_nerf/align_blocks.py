@@ -167,8 +167,12 @@ def icp_align(path_A: str, path_B: str, init_transform_path: str, store_db_path:
         transform_A = np.eye(4)
         store_transform_sqlite(store_db_path, block_name_A, transform_A)
 
+    if init_transform_path is None:
+        init_transform_path = os.path.join(os.path.dirname(path_B), "initial_transform.npy")
+
+    print(f"Using initial transform from: {init_transform_path}")
     init_transform = np.load(init_transform_path)
-    print(f"Using initial transform:", init_transform)
+
     print(f"Running ICP with threshold {threshold}")
     result = o3d.pipelines.registration.registration_icp(
         pcd_B, pcd_A, threshold,
@@ -186,17 +190,14 @@ def icp_align(path_A: str, path_B: str, init_transform_path: str, store_db_path:
     if viewer:
         path_A_transforms = os.path.join(os.path.dirname(path_A), "transforms.json")
         path_B_transforms = os.path.join(os.path.dirname(path_B), "transforms.json")
-        # pcd_B_aligned = transform_point_cloud(pcd_B, transform_B_to_global)
-        # print("Aligned result (red = A, cyan = B-aligned)")
-        # o3d.visualization.draw_geometries([pcd_A, pcd_B_aligned])
         visualize_global_camera_centers(path_A_transforms, path_B_transforms, transform_A, transform_B_to_global)
 
 def main():
     parser = argparse.ArgumentParser(description="Align NeRF blocks via ICP and store transforms.")
     parser.add_argument("ref_block", help="Path to reference block's .ply file")
     parser.add_argument("target_block", help="Path to target block's .ply file (to be aligned)")
-    parser.add_argument("--init_transform", default="./initial_transform.npy", help="Path to initial transform (npy) file to use as ICP starting guess.")
-    parser.add_argument("--db", default="../transforms.sqlite", help="Path to SQLite DB to store global transforms and AABB")
+    parser.add_argument("--init_transform", default=None, help="Path to initial transform (npy) file to use as ICP starting guess.")
+    parser.add_argument("--db", default="metadata.sqlite", help="Path to SQLite DB to store global transforms and AABB")
     parser.add_argument("--threshold", type=float, default=0.2, help="ICP distance threshold")
     parser.add_argument("--viewer", action="store_true", help="Open viewer to visualize the alignment")
     args = parser.parse_args()

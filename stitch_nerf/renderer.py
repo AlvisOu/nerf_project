@@ -60,12 +60,16 @@ if __name__ == "__main__":
 	# For loading the snapshot
 	manager = None
 	if args.snapshots:
-		snapshots = sorted(glob.glob(os.path.join(args.snapshots, "*.msgpack")))
-		manager = BlockManager(snapshots)
-		scene_info = get_scene(snapshots[0])
+		snapshot_files = sorted(glob.glob(os.path.join(args.snapshots, "*.msgpack")))
+		snapshots = [
+			(os.path.splitext(os.path.basename(path))[0], path)
+			for path in snapshot_files
+		]
+		manager = BlockManager(snapshots, "scripts/metadata.sqlite")
+		scene_info = get_scene(snapshots[0][1])
 		if scene_info is not None:
 			snapshots[0] = default_snapshot_filename(scene_info)
-		testbed.load_snapshot(snapshots[0])
+		testbed.load_snapshot(snapshots[0][1])
 
 		print(f"Found {len(snapshots)} snapshots:")
 		for snap in snapshots:
@@ -77,8 +81,24 @@ if __name__ == "__main__":
 		x_pos = testbed.camera_matrix[0][3]
 		y_pos = testbed.camera_matrix[1][3]
 		z_pos = testbed.camera_matrix[2][3]
-		print(f"X: {x_pos:.3f} Y: {y_pos:.3f} Z: {z_pos:.3f}")
+		# print(f"X: {x_pos:.3f} Y: {y_pos:.3f} Z: {z_pos:.3f}")
 		
+		result = manager.check_switch(x_pos, y_pos, z_pos)
+		print(result)
+		if result:
+			print("yes result")
+			next_snapshot, dest_x, dest_z = result
+			scene_name = os.path.splitext(os.path.basename(next_snapshot))[0]
+			scene_info = get_scene(scene_name)
+			# scene_info = get_scene(next_snapshot)
+			if scene_info is not None:
+				print("NEW SNAPSHOT")
+				next_snapshot = default_snapshot_filename(scene_info)
+			testbed.load_snapshot(next_snapshot)
+		counter += 1
+		continue
+
+		"""
 		next_snapshot = manager.check_switch(x_pos, y_pos, z_pos)
 		if next_snapshot:
 			scene_info = get_scene(next_snapshot)
@@ -87,4 +107,4 @@ if __name__ == "__main__":
 			testbed.load_snapshot(next_snapshot)
 		counter += 1
 		continue
-	
+		"""
