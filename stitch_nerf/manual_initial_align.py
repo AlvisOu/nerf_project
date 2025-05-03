@@ -3,6 +3,7 @@ import numpy as np
 import json
 import argparse
 import copy
+import os
 
 # ====== Utility to load camera centers from transforms.json ======
 
@@ -19,7 +20,12 @@ def load_camera_centers(transforms_path: str) -> np.ndarray:
 
 # ====== Manual Alignment Script ======
 
-def manual_align(ref_path, target_path, save_path="initial_transform.npy"):
+def manual_align(ref_path, target_path, save_path=None):
+
+    if save_path is None:
+        block_dir = os.path.dirname(target_path)
+        save_path = os.path.join(block_dir, "initial_transform.npy")
+
     # Load camera centers
     points_A = load_camera_centers(ref_path)
     points_B = load_camera_centers(target_path)
@@ -135,7 +141,7 @@ def main():
     parser = argparse.ArgumentParser(description="Manual alignment tool for NeRF blocks using camera centers.")
     parser.add_argument("ref_block", help="Path to reference block's transforms.json")
     parser.add_argument("target_block", help="Path to target block's transforms.json")
-    parser.add_argument("--out", default="initial_transform.npy", help="Path to save the initial transform (npy file)")
+    parser.add_argument("--out", default=None, help="Path to save the initial transform (npy file)")
     args = parser.parse_args()
 
     manual_align(args.ref_block, args.target_block, args.out)
