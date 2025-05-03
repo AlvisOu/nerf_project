@@ -24,17 +24,37 @@ RUN `.\instant-ngp data/nerf/fox`
 Run `.\instant-ngp.exe data/nerf/fox --load_snapshot=fox_snapshot.msgpack`
 Make sure the .msgpack file is located on the same level as the data/ folder
 
-To use scripts/run.py, 
-Run `python3 scripts/run.py data/nerf/fox --load_snapshot=fox_snapshot.msgpack`
+To use scripts/run.py to load msgpack AND display it 
+Run `python3 scripts/run.py data/nerf/fox --load_snapshot=fox_snapshot.msgpack --gui`
+the --gui indicates that we shoould display the model.
 
 BELOW ARE ALL BASH
 To open GUI (this is the vcxsrv):
-Run in /nerf_project: `docker run --gpus all -it -v $(pwd):/workspace -e DISPLAY=host.docker.internal:0 instant-ngp-final`
 
-To open docker file path:
+First, open Xlaunch on your computer
+Second, on the configuration, set Xlaunch display no. to 0
+Third:Run in /nerf_project: `docker run --gpus all -it -v $(pwd):/workspace -e DISPLAY=host.docker.internal:0 instant-ngp-final`
+
+To create and open a new docker container:
 `docker run --gpus all -it -v $(pwd -W):/project -e DISPLAY=host.docker.internal:0 --entrypoint bash instant-ngp-final`
+
+To list existing containers:
+`docker ps -a`
+
+To open an existing container:
+`docker start -ai <container_name>`
+currently: 
+-Name: stupefied_pascal
+-ID:   df80ac9bce2f
+
+To exit a container:
+`exit`
 
 To copy files from project to docker:
 `docker cp <local_file_path> <docker_container_id>:/<docker_file_path>`
 e.g
-`docker cp data/chairs/close 59f726f0614f:/instant-ngp/data/chairs`
+`docker cp data/chairs/close df80ac9bce2f:/instant-ngp/data/chairs`
+
+ACTUAL EXECUTION:
+In /instant-ngp directory of docker:
+python3 scripts/renderer.py --snapshots msgpacks/room_1 --gui
