@@ -43,6 +43,17 @@ def get_scene(scene):
 			return scenes[scene]
 	return None
 
+
+def teleport_and_look(testbed):
+	"""
+	Teleport through portal
+	"""
+	new_matrix = np.copy(testbed.camera_matrix)
+	new_matrix[0][3] = dest_x
+	new_matrix[2][3] = dest_z
+	testbed.set_nerf_camera_matrix(new_matrix)
+
+
 if __name__ == "__main__":
 	args = parse_args()
 	testbed = ngp.Testbed()
@@ -78,33 +89,31 @@ if __name__ == "__main__":
 	# Loop so window stays
 	counter = 0
 	while testbed.frame():
-		x_pos = testbed.camera_matrix[0][3]
-		y_pos = testbed.camera_matrix[1][3]
-		z_pos = testbed.camera_matrix[2][3]
-		# print(f"X: {x_pos:.3f} Y: {y_pos:.3f} Z: {z_pos:.3f}")
-		
-		result = manager.check_switch(x_pos, y_pos, z_pos)
-		print(result)
-		if result:
-			print("yes result")
-			next_snapshot, dest_x, dest_z = result
-			scene_name = os.path.splitext(os.path.basename(next_snapshot))[0]
-			scene_info = get_scene(scene_name)
-			# scene_info = get_scene(next_snapshot)
-			if scene_info is not None:
-				print("NEW SNAPSHOT")
-				next_snapshot = default_snapshot_filename(scene_info)
-			testbed.load_snapshot(next_snapshot)
-		counter += 1
-		continue
+		if(counter % 100 == 0):
+			print("Camera matrix: ")
+			print(testbed.camera_matrix)
+			x_pos = testbed.camera_matrix[0][3]
+			y_pos = testbed.camera_matrix[1][3]
+			z_pos = testbed.camera_matrix[2][3]
+			print(f"X: {x_pos:.3f} Y: {y_pos:.3f} Z: {z_pos:.3f}")
+			
+			result = manager.check_switch(x_pos, y_pos, z_pos, testbed)
+			if result:
+				next_snapshot, new_cam = result
+				testbed.load_snapshot(next_snapshot)
+				# new_cam[1][3] = 0.5 #hard code y pos
+				testbed.set_nerf_camera_matrix(new_cam)
+				# testbed.camera_matrix = new_cam
+				# next_snapshot, dest_x, dest_z = result
+				# scene_name = os.path.splitext(os.path.basename(next_snapshot))[0]
+				# scene_info = get_scene(scene_name)
 
-		"""
-		next_snapshot = manager.check_switch(x_pos, y_pos, z_pos)
-		if next_snapshot:
-			scene_info = get_scene(next_snapshot)
-			if scene_info is not None:
-				next_snapshot = default_snapshot_filename(scene_info)
-			testbed.load_snapshot(next_snapshot)
+				# if scene_info is not None:
+				# 	next_snapshot = default_snapshot_filename(scene_info)
+				# testbed.load_snapshot(next_snapshot)
+
+				# teleport_and_look(testbed)
+
 		counter += 1
-		continue
-		"""
+
+
