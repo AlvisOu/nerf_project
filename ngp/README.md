@@ -57,4 +57,22 @@ e.g
 
 ACTUAL EXECUTION:
 In /instant-ngp directory of docker:
-python3 scripts/renderer.py --snapshots msgpacks/room_1 --gui
+python3 scripts/renderer.py --snapshots msgpacks/room_2 --gui
+
+room_2 contains the actual files corresponding to the database.
+
+
+FOR REGULAR WORKFLOW:
+1. Open XLaunch
+    - set display no. to 0
+    - Run `docker run --gpus all -it -v $(pwd):/workspace -e DISPLAY=host.docker.internal:0 instant-ngp-final`
+
+2. Open docker in terminal 1
+    `docker start -ai stupefied_pascal`
+
+3. Copy the edited files into docker:
+    `docker cp block_manager.py df80ac9bce2f:/instant-ngp/scripts`
+    `docker cp renderer.py df80ac9bce2f:/instant-ngp/scripts`
+
+4. Run the program in docker:
+    `python3 scripts/renderer.py --snapshots msgpacks/room_2 --gui`
