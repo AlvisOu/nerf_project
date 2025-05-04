@@ -34,7 +34,7 @@ def ensure_portals_table_exists(conn):
     """)
     conn.commit()
 
-def add_portals_from_csv(conn, csv_path, radius=1):
+def add_portals_from_csv(conn, csv_path, radius=0.5):
     c = conn.cursor()
     with open(csv_path, newline='') as csvfile:
         reader = csv.reader(csvfile)
