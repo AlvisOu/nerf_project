@@ -62,7 +62,13 @@ python3 scripts/renderer.py --snapshots msgpacks/room_2 --gui
 room_2 contains the actual files corresponding to the database.
 
 
+Portals:
+slippers_outside -> chairs_multi portal at (x: 1.32, z: 3.2)
+chairs_multi -> slippers_outside portal at (x: 1.379, z: -0.4)
+
 FOR REGULAR WORKFLOW:
+0. Open docker desttop 
+
 1. Open XLaunch
     - set display no. to 0
     - Run `docker run --gpus all -it -v $(pwd):/workspace -e DISPLAY=host.docker.internal:0 instant-ngp-final`
