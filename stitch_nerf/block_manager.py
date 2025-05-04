@@ -110,19 +110,48 @@ class BlockManager:
             # If radius is smaller, teleport
             if dx*dx + dz*dz <= p.radius_sq:
                 
-                start_cam = np.eye(4, dtype=np.float32)
-                start_cam[:3, :4] = testbed.camera_matrix # set identity 3x4 to cam matrix
+                # set cam position
+                start_cam = testbed.camera_matrix
+                dest_cam = self.set_camera_position(start_cam, [p.cx, 0.75, p.cz]) # hard code y = 1
 
-                # 2. transform whole pose:   dest_local = T_dest_inv · T_src · cam
-                dest_cam = self.T_inv[p.dest_block] @ self.T[block_id] @ start_cam
-                dest_cam = dest_cam[:3, :4] # compress back to 3x4
-
+                # get the correct snapshot/block
                 self.curr_idx = self.block_to_idx[p.dest_block]
                 new_snapshot = self.get_current_snapshot_path()
                 print("Curr block: " + str(block_id) + " Dest block: " + str(p.dest_block))
+
+                # return snapshot and cam
                 return new_snapshot, dest_cam
         return None
     
+    def set_camera_position(self, cam_matrix: np.ndarray, new_pos: np.ndarray) -> np.ndarray:
+        if cam_matrix.shape != (3, 4):
+            raise ValueError("Expected 3x4 camera matrix")
+        
+        R = cam_matrix[:, :3]
+        p = np.asarray(new_pos).reshape((3,))
+        t = -R @ p
+        new_cam = cam_matrix.copy()
+        new_cam[:, 3] = t
+        return new_cam
+
+    def transformer(self):
+         # start_cam = testbed.camera_matrix
+        start_cam = np.eye(4, dtype=np.float32)
+        start_cam[:3, :4] = testbed.camera_matrix # set identity 3x4 to cam matrix
+
+        world_cam = self.T[block_id] @ start_cam
+
+        dest_cam = self.T_inv[p.dest_block] @ world_cam
+        dest_cam = dest_cam[:3, :4] # compress back to 3x4
+        return dest_cam
+    
+
+
+
+    # # 2. transform whole pose:   dest_local = T_dest_inv · T_src · cam
+    # dest_cam = self.T_inv[p.dest_block] @ self.T[block_id] @ start_cam
+    # dest_cam = dest_cam[:3, :4] # compress back to 3x4
+
     # cam_src_local = np.copy(testbed.camera_matrix)
     
     # cam_dest_local = (

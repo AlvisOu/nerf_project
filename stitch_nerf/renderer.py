@@ -88,6 +88,10 @@ if __name__ == "__main__":
 
 	# Loop so window stays
 	counter = 0
+	# curr_snapshot = snapshots[0][1]
+	# prev_snapshot = snapshots[1][1]
+	# just_entered = False
+	print(snapshots)
 	while testbed.frame():
 		if(counter % 100 == 0):
 			print("Camera matrix: ")
@@ -98,11 +102,52 @@ if __name__ == "__main__":
 			print(f"X: {x_pos:.3f} Y: {y_pos:.3f} Z: {z_pos:.3f}")
 			
 			result = manager.check_switch(x_pos, y_pos, z_pos, testbed)
-			if result:
-				next_snapshot, new_cam = result
-				testbed.load_snapshot(next_snapshot)
-				# new_cam[1][3] = 0.5 #hard code y pos
+			if (result):
+				curr_snapshot, new_cam = result
+				testbed.load_snapshot(curr_snapshot)
 				testbed.set_nerf_camera_matrix(new_cam)
+
+		counter += 1
+
+				# if (result and not just_entered) or (result and result[0] is not prev_snapshot):
+				# 	# print("snapshot: " + str(result[0]))
+
+
+				# 	# temp_snapshot = curr_snapshot #error line
+				# 	curr_snapshot, new_cam = result
+
+				# 	testbed.load_snapshot(curr_snapshot)
+				# 	# base_cam = testbed.camera_matrix.copy()
+
+				# 	testbed.set_nerf_camera_matrix(new_cam)
+				# 	just_entered = True
+				# 	prev_snapshot = temp_snapshot
+		
+				# elif not result: # left portal radius, we can enter again
+				# 	print("left the radius")
+				# 	just_entered = False
+
+				# if (result and not just_entered):
+				# 		print("Result and not just entered")
+				# elif (result and result[0] is not prev_snapshot):
+				# 	print(result[0] + " is not " + prev_snapshot)
+
+				# if prev_snapshot:	
+				# 	print("prev_snapshot: " + str(prev_snapshot))
+
+				
+
+				# if(result[0] is not prev_snapshot):
+				# 	print(result[0] + " is not " + prev_snapshot)
+				# else:
+				# 	print(result[0] + " is " + prev_snapshot)
+				
+				#what if we only manipulate viewing angle?
+				# for row in range(3):
+				# 	for col in range(3):
+				# 		new_cam[row][col] = base_cam[row][col]
+
+			
 				# testbed.camera_matrix = new_cam
 				# next_snapshot, dest_x, dest_z = result
 				# scene_name = os.path.splitext(os.path.basename(next_snapshot))[0]
@@ -113,7 +158,5 @@ if __name__ == "__main__":
 				# testbed.load_snapshot(next_snapshot)
 
 				# teleport_and_look(testbed)
-
-		counter += 1
 
 
