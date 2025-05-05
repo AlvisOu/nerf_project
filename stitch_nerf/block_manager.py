@@ -112,7 +112,8 @@ class BlockManager:
                 
                 # set cam position
                 start_cam = testbed.camera_matrix
-                dest_cam = self.set_camera_position(start_cam, [p.cx, 0.75, p.cz]) # hard code y = 1
+                dest_cam = self.set_camera_position(start_cam, [p.dest_x, 1.25, p.dest_z]) # hard code y = 1
+                print(f"dest cam: {dest_cam}")
 
                 # get the correct snapshot/block
                 self.curr_idx = self.block_to_idx[p.dest_block]
@@ -127,11 +128,11 @@ class BlockManager:
         if cam_matrix.shape != (3, 4):
             raise ValueError("Expected 3x4 camera matrix")
         
-        R = cam_matrix[:, :3]
+        # R = cam_matrix[:, :3]
         p = np.asarray(new_pos).reshape((3,))
-        t = -R @ p
+        # t = -R @ p
         new_cam = cam_matrix.copy()
-        new_cam[:, 3] = t
+        new_cam[:, 3] = p
         return new_cam
 
     def transformer(self):
