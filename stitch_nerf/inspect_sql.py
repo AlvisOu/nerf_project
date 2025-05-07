@@ -27,17 +27,11 @@ def print_metadata(db_path: str):
     for row in rows:
         block_name = row[0]
         transform = np.array(row[1:17]).reshape((4, 4))
-        aabb_min = np.array(row[17:20])
-        aabb_max = np.array(row[20:23])
 
         print("="*50)
         print(f"Block: {block_name}")
         print("Transform (T_block_to_global):")
         print(transform)
-        print("AABB (global):")
-        print(f"Min: {aabb_min}")
-        print(f"Max: {aabb_max}")
-        print("="*50 + "\n")
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Print all stored transforms and AABBs in metadata.sqlite")
