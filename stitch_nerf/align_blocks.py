@@ -49,39 +49,6 @@ def visualize_global_camera_centers(path_A, path_B, transform_A_to_global, trans
     # Visualize
     o3d.visualization.draw_geometries([pcd_A, pcd_B, axis])
 
-def transform_point_cloud(pcd: o3d.geometry.PointCloud, transform: np.ndarray) -> o3d.geometry.PointCloud:
-    """
-    Applies a 4x4 transform to an Open3D PointCloud, preserving colors and normals.
-
-    Parameters:
-        pcd: Input PointCloud in local coordinates
-        transform: 4x4 NumPy transformation matrix (T_local_to_global)
-
-    Returns:
-        Transformed PointCloud with original colors and normals (if present)
-    """
-    pcd_transformed = o3d.geometry.PointCloud()
-
-    # Transform the point coordinates
-    points_np = np.asarray(pcd.points)
-    points_homog = np.hstack((points_np, np.ones((points_np.shape[0], 1))))
-    points_transformed = (transform @ points_homog.T).T[:, :3]
-    pcd_transformed.points = o3d.utility.Vector3dVector(points_transformed)
-
-    # Copy colors if available
-    # if pcd.has_colors():
-    #     pcd_transformed.colors = copy.deepcopy(pcd.colors)
-
-    uniform_color = np.array([0, 1, 1])  # Example: cyan
-    colors = np.tile(uniform_color, (np.asarray(pcd.points).shape[0], 1))
-    pcd_transformed.colors = o3d.utility.Vector3dVector(colors)
-
-    # Copy normals if available
-    if pcd.has_normals():
-        pcd_transformed.normals = copy.deepcopy(pcd.normals)
-
-    return pcd_transformed
-
 def store_transform_sqlite(db_path: str, block_name: str, transform: np.ndarray):
     """
     Stores the transformation matrix in a SQLite database.
