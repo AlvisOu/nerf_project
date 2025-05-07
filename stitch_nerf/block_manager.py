@@ -75,7 +75,6 @@ def load_portals(db_path: str):
         for (block_a, xa, za, block_b, xb, zb, r) in cur.fetchall():
             r_sq = r * r
             portals[block_a].append(Portal(xa, za, block_b, xb, zb, r_sq))
-            # portals[block_b].append(Portal(xb, zb, block_a, xa, za, r_sq))
 
     for block_name in portals:
         print(" -", block_name)
@@ -122,48 +121,3 @@ class BlockManager:
                 print("Curr block: " + str(block_id) + " Dest block: " + str(p.dest_block))
                 return new_snapshot, dest_cam
         return None
-    
-    # cam_src_local = np.copy(testbed.camera_matrix)
-    
-    # cam_dest_local = (
-    #     self.T_inv[p.dest_block] @
-    #     self.T[block_id] @
-    #     cam_src_local
-    # ).astype(np.float32)
-    # # Source Local -> Global
-    # src_local = np.array([x, y, z, 1.0], dtype = np.float32)
-    # world_pos = self.T[block_id] @ src_local
-
-    # Global -> Dest Local
-    # dest_local = self.T_inv[p.dest_block] @ world_pos
-    # dest_x, dest_z = float(dest_local[0]), float(dest_local[2])
-    # def check_switch(self, x, y, z):
-    #     """
-    #     Returns (new_snapshot, new_x, new_z) if a portal is triggered,
-    #     or None otherwise.
-    #     """
-    #     block_id = self.get_current_block_id()
-    #     for p in self.portals_by_block.get(block_id, ()):
-    #         dx = x - p.cx
-    #         dz = z - p.cz
-    #         # If radius is smaller, teleport
-    #         if dx*dx + dz*dz <= p.radius_sq:
-    #             self.curr_idx = self.block_to_idx[p.dest_block]
-    #             new_snapshot = self.get_current_snapshot_path()
-    #             return new_snapshot, p.dest_x, p.dest_z
-    #     return None
-        
-
-
-
-# class BlockManager:
-#     def __init__(self, snapshots):
-#         self.snapshots = snapshots
-#         self.curr_idx = 0
-#         self.portals_by_block = load_portals("metadata.sqlite") # load the portals
-
-#     def check_switch(self, x, y, z):
-#         if x > 5:
-#             return snapshots[1]
-#         return None
-        

@@ -88,8 +88,9 @@ if __name__ == "__main__":
 
 	# Loop so window stays
 	counter = 0
+	print(snapshots)
 	while testbed.frame():
-		if(counter % 100 == 0):
+		if(counter % 25  == 0):
 			print("Camera matrix: ")
 			print(testbed.camera_matrix)
 			x_pos = testbed.camera_matrix[0][3]
@@ -98,22 +99,9 @@ if __name__ == "__main__":
 			print(f"X: {x_pos:.3f} Y: {y_pos:.3f} Z: {z_pos:.3f}")
 			
 			result = manager.check_switch(x_pos, y_pos, z_pos, testbed)
-			if result:
-				next_snapshot, new_cam = result
-				testbed.load_snapshot(next_snapshot)
-				# new_cam[1][3] = 0.5 #hard code y pos
+			if (result):
+				curr_snapshot, new_cam = result
+				testbed.load_snapshot(curr_snapshot)
 				testbed.set_nerf_camera_matrix(new_cam)
-				# testbed.camera_matrix = new_cam
-				# next_snapshot, dest_x, dest_z = result
-				# scene_name = os.path.splitext(os.path.basename(next_snapshot))[0]
-				# scene_info = get_scene(scene_name)
-
-				# if scene_info is not None:
-				# 	next_snapshot = default_snapshot_filename(scene_info)
-				# testbed.load_snapshot(next_snapshot)
-
-				# teleport_and_look(testbed)
 
 		counter += 1
-
-
