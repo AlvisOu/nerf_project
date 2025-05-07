@@ -56,6 +56,7 @@ def add_portals_from_csv(conn, csv_path, radius=0.5):
 
             portal_id = f"{block_a}_to_{block_b}_{idx}"
 
+            # Insert A → B
             c.execute("""
                 INSERT INTO portals (
                     portal_id,
@@ -67,6 +68,22 @@ def add_portals_from_csv(conn, csv_path, radius=0.5):
                 portal_id,
                 block_a, x_a, z_a,
                 block_b, x_b, z_b,
+                radius
+            ))
+
+            # Insert B → A
+            reverse_id = f"{block_b}_to_{block_a}_{idx}"
+            c.execute("""
+                INSERT INTO portals (
+                    portal_id,
+                    block_a, local_x_a, local_z_a,
+                    block_b, local_x_b, local_z_b,
+                    radius
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+            """, (
+                reverse_id,
+                block_b, x_b, z_b,
+                block_a, x_a, z_a,
                 radius
             ))
 
